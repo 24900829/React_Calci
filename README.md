@@ -1,134 +1,192 @@
-# Ex04 Simple Calculator - React Project
+# Ex05-Image Carousel
+
 ## NAME : KAVIBHARATHI K
 ## REG NO : 212224220045
 
 ## AIM
-To  develop a Simple Calculator using React.js with clean and responsive design, ensuring a smooth user experience across different screen sizes.
+To create a Image Carousel using React 
 
 ## ALGORITHM
-### STEP 1
-Create a React App.
+### STEP 1 Initial Setup:
+Input: A list of images to display in the carousel.
 
-### STEP 2
-Open a terminal and run:
-  <ul><li>npx create-react-app simple-calculator</li>
-  <li>cd simple-calculator</li>
-  <li>npm start</li></ul>
+Output: A component displaying the images with navigation controls (e.g., next/previous buttons).
 
-### STEP 3
-Inside the src/ folder, create a new file Calculator.js and define the basic structure.
+### Step 2 State Management:
+Use a state variable (currentIndex) to track the index of the current image displayed.
 
-### STEP 4
-Plan the UI: Display screen, number buttons (0-9), operators (+, -, *, /), clear (C), and equal (=).
+The carousel starts with the first image, so initialize currentIndex to 0.
 
-### STEP 5
-Create a new file Calculator.css in src/ and add the styling.
+### Step 3 Navigation Controls:
+Next Image: When the "Next" button is clicked, increment currentIndex.
 
-### STEP 6
-Open src/App.js and modify it.
+If currentIndex is at the end of the image list (last image), loop back to the first image using modulo:
+currentIndex = (currentIndex + 1) % images.length;
 
-### STEP 7
-Start the development server.
-  npm start
+Previous Image: When the "Previous" button is clicked, decrement currentIndex.
 
-### STEP 8
-Open http://localhost:3000/ in the browser.
+If currentIndex is at the beginning (first image), loop back to the last image:
+currentIndex = (currentIndex - 1 + images.length) % images.length;
 
-### STEP 9
-Test the calculator by entering numbers and operations.
+### Step 4 Displaying the Image:
+The currentIndex determines which image is displayed.
 
-### STEP 10
-Fix styling issues and refine content placement.
+Using the currentIndex, display the corresponding image from the images list.
 
-### STEP 11
-Deploy the website.
+### Step 5 Auto-Rotation:
+Set an interval to automatically change the image after a set amount of time (e.g., 3 seconds).
 
-### STEP 12
-Upload to GitHub Pages for free hosting.
+Use setInterval to call the nextImage() function at regular intervals.
+
+Clean up the interval when the component unmounts using clearInterval to prevent memory leaks.
 
 ## PROGRAM
-
 ```
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Simple Calculator - React</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-      body { font-family: Arial, sans-serif; display:flex;justify-content:center;align-items:center;height:100vh;background:#f3f3f3; }
-      .calc { background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.1); }
-      .display { background:#eee; padding:15px; text-align:right; font-size:24px; margin-bottom:15px; border-radius:8px; }
-      .buttons { display:grid; grid-template-columns:repeat(4,60px); gap:10px; }
-      button { padding:15px; font-size:18px; border:none; border-radius:8px; cursor:pointer; background:#f0f0f0; }
-      button.op { background:#d0e0ff; }
-      button.equal { grid-column: span 4; background:#4f46e5; color:white; }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
+app.js
+import React from 'react';
+import ImageCarousel from './imageCarousel';
 
-    <script type="text/babel">
-      function Calculator() {
-        const [display, setDisplay] = React.useState("0");
-        const [first, setFirst] = React.useState(null);
-        const [op, setOp] = React.useState(null);
-        const [wait, setWait] = React.useState(false);
+function App() {
+  const images = [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e",
+    "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+  ];
 
-        const input = (d) => {
-          setDisplay(prev => wait ? (setWait(false), String(d)) : (prev==="0"? String(d): prev+d));
-        };
-        const dot = () => setDisplay(p => p.includes(".") ? p : p+".");
-        const clear = () => { setDisplay("0"); setFirst(null); setOp(null); setWait(false); };
-        const calc = (a,b,o) => ({"+":a+b,"-":a-b,"*":a*b,"/":b? a/b : NaN}[o]);
-        const choose = (nextOp) => {
-          const val = Number(display);
-          if(first==null) setFirst(val);
-          else if(!wait){ let res = calc(first,val,op); setFirst(res); setDisplay(String(res)); }
-          setOp(nextOp); setWait(true);
-        };
-        const equal = () => { if(op==null) return; let res=calc(first,Number(display),op); setDisplay(String(res)); setFirst(null); setOp(null); };
+  return (
+    <div className="App">
+      <ImageCarousel images={images} />
+    </div>
+  );
+}
 
-        return (
-          <div className="calc">
-            <div className="display">{display}</div>
-            <div className="buttons">
-              <button onClick={clear}>C</button>
-              <button onClick={() => setDisplay(p=>p[0]==='-'?p.slice(1):'-'+p)}>±</button>
-              <button onClick={() => setDisplay(p=>String(+p/100))}>%</button>
-              <button className="op" onClick={()=>choose("/")}>÷</button>
+export default App;
+```
+```
+image.js
+import React, { useState, useEffect, useCallback } from 'react';
 
-              {[7,8,9].map(n=><button key={n} onClick={()=>input(n)}>{n}</button>)}
-              <button className="op" onClick={()=>choose("*")}>×</button>
+const images = [
+  'https://images.unsplash.com/photo-1503023391225,
+  'https://images.unsplash.com/photo-1534528741702,
+  'https://images.unsplash.com/photo-1520813792240'
+];
 
-              {[4,5,6].map(n=><button key={n} onClick={()=>input(n)}>{n}</button>)}
-              <button className="op" onClick={()=>choose("-")}>−</button>
+function ImageCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-              {[1,2,3].map(n=><button key={n} onClick={()=>input(n)}>{n}</button>)}
-              <button className="op" onClick={()=>choose("+")}>+</button>
+  const nextImage = useCallback(() => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+  }, []);
 
-              <button onClick={()=>setDisplay(p=>p.length>1?p.slice(0,-1):"0")}>⌫</button>
-              <button onClick={()=>input(0)}>0</button>
-              <button onClick={dot}>.</button>
-              <button className="equal" onClick={equal}>=</button>
-            </div>
-          </div>
-        );
-      }
+  const prevImage = () => {
+    setCurrentIndex((prevIndex) =>
+      (prevIndex - 1 + images.length) % images.length
+    );
+  };
 
-      ReactDOM.createRoot(document.getElementById("root")).render(<Calculator />);
-    </script>
-  </body>
-</html>
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextImage();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [nextImage]);
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <h1>React Image Carousel</h1>
+      <img
+        src={images[currentIndex]}
+        alt="carousel"
+        style={{ width: '400px', borderRadius: '10px' }}
+      />
+      <br />
+      <button onClick={prevImage}>Previous</button>
+      <button onClick={nextImage} style={{ marginLeft: '10px' }}>
+        Next
+      </button>
+    </div>
+  );
+}
+
+export default ImageCarousel;
+```
+```
+index.css
+/* Reset and Font */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f8f9fa, #d6e4f0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Carousel Container */
+.carousel-container {
+  background-color: #ffffffdd;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Title */
+.carousel-container h1 {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+/* Image Styling */
+.carousel-container img {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease;
+}
+
+.carousel-container img:hover {
+  transform: scale(1.03);
+}
+
+/* Button Container */
+.button-container {
+  margin-top: 20px;
+}
+
+/* Navigation Buttons */
+.button-container button {
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  margin: 0 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.button-container button:hover {
+  background-color: #34495e;
+}
 ```
 
 ## OUTPUT
 
-<img width="1335" height="799" alt="Screenshot 2025-09-01 113830" src="https://github.com/user-attachments/assets/f7ae2b5a-2bbb-490d-8c8b-6d99dc27ab6c" />
+![image](https://github.com/user-attachments/assets/5ea4add6-e61e-4a39-bbc1-7307ff86ab18)
+
+
+![image](https://github.com/user-attachments/assets/83f26410-083d-4745-8934-8ab75d276989)
+
 
 
 
 ## RESULT
-The program for developing a simple calculator in React.js is executed successfully.
+The program for creating Image Carousel using React is executed successfully.
